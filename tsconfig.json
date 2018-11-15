@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "es5",                    
+    "strict": true,    
+    "outDir":"./dist/", 
+    "inlineSources":false,
+    "sourceMap":false,
+    "removeComments": true,
+    "esModuleInterop": true,
+    "outFile": "./dist/dist.js"
+  },
+  "exclude": [
+    "node_modules"
+  ],
+  "include": [
+    "./test/"
+  ]
+}

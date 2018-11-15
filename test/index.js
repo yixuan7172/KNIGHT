@@ -1,4 +1,14 @@
-import _Math from '../src/math/_Math'
-
-let uuid = _Math.createUUID()
-console.log(uuid)
+"use strict";
+var F = /** @class */ (function () {
+    function F() {
+        this.__name = '';
+    }
+    Object.defineProperty(F.prototype, "name", {
+        get: function () {
+            return this.__name;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return F;
+}());
