@@ -1,18 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es5",                    
-    "strict": true,    
-    "outDir":"./dist/", 
-    "inlineSources":false,
-    "sourceMap":false,
+    "target": "es5",
+
+    "outDir": "./dist/",
+    "inlineSources": false,
+    "sourceMap": false,
     "removeComments": true,
     "esModuleInterop": true,
-    "outFile": "./dist/dist.js"
+    "outFile": "./dist/dist.js",
+    "module": "amd",
+    "noImplicitAny": false,
+    "experimentalDecorators": true
   },
   "exclude": [
     "node_modules"
   ],
   "include": [
-    "./test/"
+    "./src/"
   ]
 }
