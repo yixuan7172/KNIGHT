@@ -1,6 +1,5 @@
-define("event/Event", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
+var KINGHT;
+(function (KINGHT) {
     var Event = (function () {
         function Event(type, bubbles, cancelable) {
             this.type = type;
@@ -16,11 +15,10 @@ define("event/Event", ["require", "exports"], function (require, exports) {
         }
         return Event;
     }());
-    exports.default = Event;
-});
-define("event/EventDispatcher", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
+    KINGHT.Event = Event;
+})(KINGHT || (KINGHT = {}));
+var KINGHT;
+(function (KINGHT) {
     var EventDispatcher = (function () {
         function EventDispatcher() {
             this.__listeners = null;
@@ -73,15 +71,20 @@ define("event/EventDispatcher", ["require", "exports"], function (require, expor
                 delete this.__captureListeners[type];
             }
         };
-        EventDispatcher.prototype.dispatchEvent = function (event) {
+        EventDispatcher.prototype.dispatchEvent = function (event, bubble, cancelable) {
+            if (typeof event === "string") {
+                var listeners = this.__listeners;
+                if (!bubble && (!listeners || !listeners[event])) {
+                    return true;
+                }
+            }
         };
         return EventDispatcher;
     }());
-    exports.default = EventDispatcher;
-});
-define("math/_Math", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
+    KINGHT.EventDispatcher = EventDispatcher;
+})(KINGHT || (KINGHT = {}));
+var KINGHT;
+(function (KINGHT) {
     var _Math = (function () {
         function _Math() {
         }
@@ -128,5 +131,5 @@ define("math/_Math", ["require", "exports"], function (require, exports) {
         };
         return _Math;
     }());
-    exports.default = _Math;
-});
+    KINGHT._Math = _Math;
+})(KINGHT || (KINGHT = {}));
