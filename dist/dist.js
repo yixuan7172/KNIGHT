@@ -85,6 +85,92 @@ var KINGHT;
 })(KINGHT || (KINGHT = {}));
 var KINGHT;
 (function (KINGHT) {
+    var matrixPool = [];
+    var Matrix = (function () {
+        function Matrix(a, b, c, d, tx, ty) {
+            if (a === void 0) { a = 1; }
+            if (b === void 0) { b = 0; }
+            if (c === void 0) { c = 0; }
+            if (d === void 0) { d = 1; }
+            if (tx === void 0) { tx = 0; }
+            if (ty === void 0) { ty = 0; }
+            this.a = a;
+            this.b = b;
+            this.c = c;
+            this.d = d;
+            this.tx = tx;
+            this.ty = ty;
+        }
+        Matrix.create = function () {
+            var matrix = matrixPool.pop();
+            if (!matrix) {
+                matrix = new Matrix();
+            }
+            return matrix;
+        };
+        Matrix.release = function (matrix) {
+            if (!matrix)
+                return;
+            matrixPool.push(matrix);
+        };
+        Matrix.prototype.clone = function (matrix) {
+            return new Matrix(this.a, this.b, this.c, this.d, this.tx, this.ty);
+        };
+        Matrix.prototype.identity = function () {
+            this.a = this.d = 1;
+            this.b = this.c = this.tx = this.ty = 0;
+            return this;
+        };
+        Matrix.prototype.isIdentity = function () {
+            return this.a === 1 && this.b === 0 && this.c === 0 && this.d === 1 && this.tx === 0 && this.ty === 0;
+        };
+        Matrix.prototype.setValues = function (a, b, c, d, tx, ty) {
+            this.a = a != null ? a : 1;
+            this.b = b || 0;
+            this.c = c || 0;
+            this.d = d != null ? d : 1;
+            this.tx = tx || 0;
+            this.ty = ty || 0;
+            return this;
+        };
+        Matrix.prototype.equals = function (other) {
+            return this.a === other.a &&
+                this.b === other.b &&
+                this.c === other.c &&
+                this.d === other.d &&
+                this.tx === other.tx &&
+                this.ty === other.ty;
+        };
+        Matrix.prototype.copy = function (other) {
+            return this.setValues(other.a, other.b, other.c, other.d, other.tx, other.ty);
+        };
+        Matrix.prototype.toString = function () {
+            return "[Matrix(a=" + this.a + ",b=" + this.b + ",c=" + this.c + ",d=" + this.d + ",tx=" + this.tx + ",ty=" + this.ty + ")]";
+        };
+        return Matrix;
+    }());
+    KINGHT.Matrix = Matrix;
+})(KINGHT || (KINGHT = {}));
+var KINGHT;
+(function (KINGHT) {
+    var Point = (function () {
+        function Point() {
+        }
+        return Point;
+    }());
+    KINGHT.Point = Point;
+})(KINGHT || (KINGHT = {}));
+var KINGHT;
+(function (KINGHT) {
+    var Rectangle = (function () {
+        function Rectangle() {
+        }
+        return Rectangle;
+    }());
+    KINGHT.Rectangle = Rectangle;
+})(KINGHT || (KINGHT = {}));
+var KINGHT;
+(function (KINGHT) {
     var _Math = (function () {
         function _Math() {
         }
