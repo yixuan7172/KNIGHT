@@ -21,7 +21,7 @@ namespace KINGHT {
         }
 
         public static create(): Matrix {
-            let matrix = matrixPool.pop()
+            let matrix: Matrix = matrixPool.pop()
             if (!matrix) {
                 matrix = new Matrix()
             }
@@ -35,7 +35,7 @@ namespace KINGHT {
 
         //target =  other * this
         public append(a: number, b: number, c: number, d: number, tx: number, ty: number): Matrix {
-            let ma = this.a, mb = this.b, mc = this.c, md = this.d
+            let ma: number = this.a, mb: number = this.b, mc: number = this.c, md: number = this.d
             if (a !== 1 || b !== 0 || c !== 0 || d !== 1) {
                 this.a = ma * a + mc * b
                 this.b = mb * a + md * b
@@ -49,7 +49,7 @@ namespace KINGHT {
 
         //target = this * other
         public prepend(a: number, b: number, c: number, d: number, tx: number, ty: number): Matrix {
-            let ma = this.a, mb = this.b, mc = this.c, md = this.d
+            let ma: number = this.a, mb: number = this.b, mc: number = this.c, md: number = this.d
             if (a !== 1 || b !== 0 || c !== 0 || d !== 1) {
                 this.a = a * ma + c * mb
                 this.b = b * ma + d * mb
@@ -69,6 +69,48 @@ namespace KINGHT {
             return this.prepend(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty)
         }
 
+        public translate(dx: number, dy: number): Matrix {
+            this.tx += dx
+            this.ty += dy
+            return this
+        }
+
+        public scale(sx: number, sy: number): Matrix {
+            if (sx !== 1) {
+                this.a *= sx
+                this.c *= sx
+                this.tx *= sx
+            }
+            if (sy !== 1) {
+                this.b *= sy
+                this.d *= sy
+                this.ty *= sy
+            }
+            return this
+        }
+
+        public rotate(angle: number): Matrix {
+            angle %= 360
+            if (angle !== 0) {
+                let rad: number = _Math.deg2Rad(angle)
+                let cos: number = Math.cos(rad),
+                    sin: number = Math.sin(rad)
+                let a: number = this.a, b: number = this.b,
+                    c: number = this.c, d: number = this.d,
+                    tx: number = this.tx, ty: number = this.ty
+                this.a = a * cos - b * sin
+                this.b = a * sin + b * cos
+                this.c = c * cos - d * sin
+                this.d = c * sin + d * cos
+                this.tx = tx * cos - ty * sin
+                this.ty = tx * sin + ty * cos
+            }
+            return this
+        }
+
+        public inverse(): Matrix {
+
+        }
 
         public clone(matrix: Matrix): Matrix {
             return new Matrix(this.a, this.b, this.c, this.d, this.tx, this.ty)
