@@ -113,18 +113,93 @@ var KINGHT;
                 return;
             matrixPool.push(matrix);
         };
+        Matrix.prototype.append = function (a, b, c, d, tx, ty) {
+            var ma = this.a, mb = this.b, mc = this.c, md = this.d;
+            if (a !== 1 || b !== 0 || c !== 0 || d !== 1) {
+                this.a = ma * a + mc * b;
+                this.b = mb * a + md * b;
+                this.c = ma * c + mc * d;
+                this.d = mb * c + md * d;
+            }
+            this.tx = ma * tx + mc * ty + this.tx;
+            this.ty = mb * tx + md * ty + this.ty;
+            return this;
+        };
+        Matrix.prototype.prepend = function (a, b, c, d, tx, ty) {
+            var ma = this.a, mb = this.b, mc = this.c, md = this.d;
+            if (a !== 1 || b !== 0 || c !== 0 || d !== 1) {
+                this.a = a * ma + c * mb;
+                this.b = b * ma + d * mb;
+                this.c = a * mc + c * md;
+                this.d = b * mc + d * md;
+            }
+            this.tx = a * this.tx + c * this.ty + tx;
+            this.tx = b * this.tx + d * this.ty + ty;
+            return this;
+        };
+        Matrix.prototype.appendMatrix = function (matrix) {
+            return this.append(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
+        };
+        Matrix.prototype.prependMatrix = function (matrix) {
+            return this.prepend(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
+        };
+        Matrix.prototype.translate = function (dx, dy) {
+            this.tx += dx;
+            this.ty += dy;
+            return this;
+        };
+        Matrix.prototype.scale = function (sx, sy) {
+            if (sx !== 1) {
+                this.a *= sx;
+                this.c *= sx;
+                this.tx *= sx;
+            }
+            if (sy !== 1) {
+                this.b *= sy;
+                this.d *= sy;
+                this.ty *= sy;
+            }
+            return this;
+        };
+        Matrix.prototype.rotate = function (angle) {
+            angle %= 360;
+            if (angle !== 0) {
+                var rad = KINGHT._Math.deg2Rad(angle);
+                var cos = Math.cos(rad), sin = Math.sin(rad);
+                var a = this.a, b = this.b, c = this.c, d = this.d, tx = this.tx, ty = this.ty;
+                this.a = a * cos - b * sin;
+                this.b = a * sin + b * cos;
+                this.c = c * cos - d * sin;
+                this.d = c * sin + d * cos;
+                this.tx = tx * cos - ty * sin;
+                this.ty = tx * sin + ty * cos;
+            }
+            return this;
+        };
+        Matrix.prototype.inverse = function () {
+            var a = this.a, b = this.b, c = this.c, d = this.d, tx = this.tx, ty = this.ty;
+            var n = a * d - b * c;
+            if (n === 0)
+                return this;
+            n = 1 / n;
+            this.a = d * n;
+            this.b = -b * n;
+            this.c = -c * n;
+            this.d = a * n;
+            this.tx = (c * ty - d * tx) * n;
+            this.ty = -(a * ty - b * tx) * n;
+            return this;
+        };
         Matrix.prototype.clone = function (matrix) {
             return new Matrix(this.a, this.b, this.c, this.d, this.tx, this.ty);
         };
         Matrix.prototype.identity = function () {
-            this.a = this.d = 1;
-            this.b = this.c = this.tx = this.ty = 0;
-            return this;
+            return this.set(1, 0, 0, 1, 0, 0);
         };
         Matrix.prototype.isIdentity = function () {
             return this.a === 1 && this.b === 0 && this.c === 0 && this.d === 1 && this.tx === 0 && this.ty === 0;
         };
-        Matrix.prototype.setValues = function (a, b, c, d, tx, ty) {
+        Matrix.prototype.set = function (a, b, c, d, tx, ty) {
             this.a = a != null ? a : 1;
             this.b = b || 0;
             this.c = c || 0;
@@ -142,7 +217,7 @@ var KINGHT;
                 this.ty === other.ty;
         };
         Matrix.prototype.copy = function (other) {
-            return this.setValues(other.a, other.b, other.c, other.d, other.tx, other.ty);
+            return this.set(other.a, other.b, other.c, other.d, other.tx, other.ty);
         };
         Matrix.prototype.toString = function () {
             return "[Matrix(a=" + this.a + ",b=" + this.b + ",c=" + this.c + ",d=" + this.d + ",tx=" + this.tx + ",ty=" + this.ty + ")]";
@@ -154,8 +229,46 @@ var KINGHT;
 var KINGHT;
 (function (KINGHT) {
     var Point = (function () {
-        function Point() {
+        function Point(x, y) {
+            if (x === void 0) { x = 0; }
+            if (y === void 0) { y = 0; }
+            this.set(x, y);
         }
+        Point.prototype.set = function (x, y) {
+            this.x = x;
+            this.y = y;
+            return this;
+        };
+        Point.prototype.length = function () {
+            return Math.sqrt(this.x * this.x + this.y * this.y);
+        };
+        Point.prototype.clone = function () {
+            return new Point(this.x, this.y);
+        };
+        Point.prototype.copy = function (point) {
+            this.x = point.x;
+            this.y = point.y;
+            return this;
+        };
+        Point.prototype.add = function (point) {
+            this.x += point.x;
+            this.y += point.y;
+            return this;
+        };
+        Point.prototype.sub = function (point) {
+            this.x -= point.x;
+            this.y -= point.y;
+            return this;
+        };
+        Point.prototype.equals = function (point) {
+            return this.x === point.x && this.y === point.y;
+        };
+        Point.prototype.distance = function (point) {
+            return Math.sqrt(Math.pow(this.x - point.x, 2) + Math.pow(this.y - point.y, 2));
+        };
+        Point.prototype.toString = function () {
+            return "[Point(x=" + this.x + ",y=" + this.y + ")]";
+        };
         return Point;
     }());
     KINGHT.Point = Point;

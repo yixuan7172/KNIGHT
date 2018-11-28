@@ -109,7 +109,23 @@ namespace KINGHT {
         }
 
         public inverse(): Matrix {
+            let a: number = this.a,
+                b: number = this.b,
+                c: number = this.c,
+                d: number = this.d,
+                tx: number = this.tx,
+                ty: number = this.ty
 
+            let n: number = a * d - b * c
+            if (n === 0) return this
+            n = 1 / n
+            this.a = d * n
+            this.b = -b * n
+            this.c = -c * n
+            this.d = a * n
+            this.tx = (c * ty - d * tx) * n
+            this.ty = -(a * ty - b * tx) * n
+            return this
         }
 
         public clone(matrix: Matrix): Matrix {
