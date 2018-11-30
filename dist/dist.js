@@ -85,7 +85,6 @@ var KINGHT;
 })(KINGHT || (KINGHT = {}));
 var KINGHT;
 (function (KINGHT) {
-    var matrixPool = [];
     var Matrix = (function () {
         function Matrix(a, b, c, d, tx, ty) {
             if (a === void 0) { a = 1; }
@@ -94,25 +93,8 @@ var KINGHT;
             if (d === void 0) { d = 1; }
             if (tx === void 0) { tx = 0; }
             if (ty === void 0) { ty = 0; }
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.d = d;
-            this.tx = tx;
-            this.ty = ty;
+            this.set(a, b, c, d, tx, ty);
         }
-        Matrix.create = function () {
-            var matrix = matrixPool.pop();
-            if (!matrix) {
-                matrix = new Matrix();
-            }
-            return matrix;
-        };
-        Matrix.release = function (matrix) {
-            if (!matrix)
-                return;
-            matrixPool.push(matrix);
-        };
         Matrix.prototype.append = function (a, b, c, d, tx, ty) {
             var ma = this.a, mb = this.b, mc = this.c, md = this.d;
             if (a !== 1 || b !== 0 || c !== 0 || d !== 1) {
@@ -251,14 +233,15 @@ var KINGHT;
             return this;
         };
         Point.prototype.add = function (point) {
-            this.x += point.x;
-            this.y += point.y;
+            return new Point(this.x + point.x, this.y + point.y);
+        };
+        Point.prototype.offset = function (dx, dy) {
+            this.x += dx;
+            this.y += dy;
             return this;
         };
         Point.prototype.sub = function (point) {
-            this.x -= point.x;
-            this.y -= point.y;
-            return this;
+            return new Point(this.x - point.x, this.y - point.y);
         };
         Point.prototype.equals = function (point) {
             return this.x === point.x && this.y === point.y;
@@ -276,8 +259,175 @@ var KINGHT;
 var KINGHT;
 (function (KINGHT) {
     var Rectangle = (function () {
-        function Rectangle() {
+        function Rectangle(x, y, width, height) {
+            if (x === void 0) { x = 0; }
+            if (y === void 0) { y = 0; }
+            if (width === void 0) { width = 0; }
+            if (height === void 0) { height = 0; }
+            this.set(x, y, width, height);
         }
+        Object.defineProperty(Rectangle.prototype, "left", {
+            get: function () {
+                return this.x;
+            },
+            set: function (value) {
+                this.width += this.x - value;
+                this.x = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Rectangle.prototype, "top", {
+            get: function () {
+                return this.y;
+            },
+            set: function (value) {
+                this.height += this.y - value;
+                this.y = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Rectangle.prototype, "right", {
+            get: function () {
+                return this.x + this.width;
+            },
+            set: function (value) {
+                this.width = value - this.x;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Rectangle.prototype, "bottom", {
+            get: function () {
+                return this.y + this.height;
+            },
+            set: function (value) {
+                this.height += value - this.y;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Rectangle.prototype, "topLeft", {
+            get: function () {
+                return new KINGHT.Point(this.left, this.top);
+            },
+            set: function (value) {
+                this.left = value.x;
+                this.top = value.y;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Rectangle.prototype, "bottomRight", {
+            get: function () {
+                return new KINGHT.Point(this.right, this.bottom);
+            },
+            set: function (value) {
+                this.right = value.x;
+                this.bottom = value.y;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Rectangle.prototype.copy = function (rect) {
+            this.x = rect.x;
+            this.y = rect.y;
+            this.width = rect.width;
+            this.height = rect.height;
+            return this;
+        };
+        Rectangle.prototype.clone = function () {
+            return new Rectangle(this.x, this.y, this.width, this.height);
+        };
+        Rectangle.prototype.set = function (x, y, width, height) {
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+            return this;
+        };
+        Rectangle.prototype.contains = function (x, y) {
+            return (this.left <= x && x <= this.right
+                && this.top <= y && y <= this.bottom);
+        };
+        Rectangle.prototype.containsPoint = function (point) {
+            return this.contains(point.x, point.y);
+        };
+        Rectangle.prototype.containsRect = function (rect) {
+            return (rect.left >= this.left && rect.left < this.right &&
+                rect.top >= this.top && rect.top < this.bottom &&
+                rect.right <= this.right && rect.right > this.left &&
+                rect.bottom <= this.bottom && rect.bottom > this.top);
+        };
+        Rectangle.prototype.isEmpty = function () {
+            return this.width <= 0 || this.height <= 0;
+        };
+        Rectangle.prototype.setEmpty = function () {
+            this.x = 0;
+            this.y = 0;
+            this.width = 0;
+            this.height = 0;
+            return this;
+        };
+        Rectangle.prototype.equals = function (rect) {
+            if (this === rect)
+                return true;
+            return (this.x === rect.x &&
+                this.y === rect.y &&
+                this.width === rect.width &&
+                this.height === rect.height);
+        };
+        Rectangle.prototype.offset = function (x, y) {
+            this.x += x;
+            this.y += y;
+            return this;
+        };
+        Rectangle.prototype.offsetPoint = function (point) {
+            return this.offset(point.x, point.y);
+        };
+        Rectangle.prototype.union = function (toUnion) {
+            var result = this.clone();
+            if (toUnion.isEmpty())
+                return result;
+            if (result.isEmpty()) {
+                result.copy(toUnion);
+                return result;
+            }
+            var minX = Math.min(result.x, toUnion.x);
+            var minY = Math.min(result.y, toUnion.y);
+            var width = Math.max(result.right, toUnion.right) - minX;
+            var height = Math.max(result.bottom, toUnion.bottom) - minY;
+            return result.set(minX, minY, width, height);
+        };
+        Rectangle.prototype.intersection = function (toIntersectRect) {
+            var result = this.clone();
+            if (result.isEmpty() || toIntersectRect.isEmpty()) {
+                return result.setEmpty();
+            }
+            var min = Math.min, max = Math.max;
+            var maxX = max(this.x, toIntersectRect.x);
+            var maxY = max(this.y, toIntersectRect.y);
+            var width = min(this.right, toIntersectRect.right) - maxX;
+            var height = min(this.bottom, toIntersectRect.bottom) - maxY;
+            if (width <= 0 || height <= 0)
+                return result.setEmpty();
+            return result.set(maxX, maxY, width, height);
+        };
+        Rectangle.prototype.isIntersects = function (toIntersectRect) {
+            return (Math.max(this.x, toIntersectRect.x) <= Math.min(this.right, toIntersectRect.right) &&
+                Math.max(this.y, toIntersectRect.y) <= Math.min(this.bottom, toIntersectRect.bottom));
+        };
+        Rectangle.prototype.inflate = function (dx, dy) {
+            this.x -= dx;
+            this.width += 2 * dx;
+            this.y -= dy;
+            this.height += 2 * dy;
+            return this;
+        };
+        Rectangle.prototype.toString = function () {
+            return "[Rectangle(x=" + this.x + ",y=" + this.y + ",width=" + this.width + ",height=" + this.height + ")]";
+        };
         return Rectangle;
     }());
     KINGHT.Rectangle = Rectangle;
@@ -331,4 +481,161 @@ var KINGHT;
         return _Math;
     }());
     KINGHT._Math = _Math;
+})(KINGHT || (KINGHT = {}));
+var KINGHT;
+(function (KINGHT) {
+    var WebGLUtils = (function () {
+        function WebGLUtils() {
+        }
+        WebGLUtils.compileProgram = function (gl, vertexSrc, framSrc) {
+            var fragmentShader = this.compileFragmentShader(gl, framSrc);
+            var vertexShader = this.compileVertexShader(gl, vertexSrc);
+            var program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.log("program not linked!");
+                console.log(gl.getProgramInfoLog(program));
+                gl.deleteProgram(program);
+                return null;
+            }
+            return program;
+        };
+        WebGLUtils.compileFragmentShader = function (gl, shadersource) {
+            return this.__compileShader(gl, shadersource, gl.FRAGMENT_SHADER);
+        };
+        WebGLUtils.compileVertexShader = function (gl, shadersource) {
+            return this.__compileShader(gl, shadersource, gl.VERTEX_SHADER);
+        };
+        WebGLUtils.__compileShader = function (gl, shadersource, shaderType) {
+            var shader = gl.createShader(shaderType);
+            gl.shaderSource(shader, shadersource);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.log("shader not compiled!");
+                console.log(gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        };
+        WebGLUtils.checkCanUseWebGL = function () {
+            if (this.canUseWebGL == void 0) {
+                try {
+                    var canvas = document.createElement('canvas');
+                    this.canUseWebGL = !!window['WebGLRenderingContext'] && !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));
+                }
+                catch (e) {
+                    this.canUseWebGL = false;
+                }
+            }
+            return this.canUseWebGL;
+        };
+        return WebGLUtils;
+    }());
+    KINGHT.WebGLUtils = WebGLUtils;
+})(KINGHT || (KINGHT = {}));
+var KINGHT;
+(function (KINGHT) {
+    function createCanvas(width, height) {
+        var canvas = document.createElement('canvas');
+        if (width != void 0 && height != void 0) {
+            canvas.width = width;
+            canvas.height = height;
+        }
+        return canvas;
+    }
+    var WebGLRenderContext = (function () {
+        function WebGLRenderContext(width, height) {
+        }
+        WebGLRenderContext.getInstance = function (width, height) {
+            if (!this.instance)
+                return new WebGLRenderContext(width, height);
+            return this.instance;
+        };
+        return WebGLRenderContext;
+    }());
+    KINGHT.WebGLRenderContext = WebGLRenderContext;
+})(KINGHT || (KINGHT = {}));
+var KINGHT;
+(function (KINGHT) {
+    var WebGLVertexArrayObject = (function () {
+        function WebGLVertexArrayObject() {
+        }
+        return WebGLVertexArrayObject;
+    }());
+    KINGHT.WebGLVertexArrayObject = WebGLVertexArrayObject;
+})(KINGHT || (KINGHT = {}));
+var KINGHT;
+(function (KINGHT) {
+    var WebGLDrawCmdManager = (function () {
+        function WebGLDrawCmdManager() {
+        }
+        return WebGLDrawCmdManager;
+    }());
+    KINGHT.WebGLDrawCmdManager = WebGLDrawCmdManager;
+})(KINGHT || (KINGHT = {}));
+var KINGHT;
+(function (KINGHT) {
+    var WebGLRenderBuffer = (function () {
+        function WebGLRenderBuffer() {
+        }
+        return WebGLRenderBuffer;
+    }());
+    KINGHT.WebGLRenderBuffer = WebGLRenderBuffer;
+})(KINGHT || (KINGHT = {}));
+var KINGHT;
+(function (KINGHT) {
+    var WebGLRenderTarget = (function () {
+        function WebGLRenderTarget(gl, width, height) {
+            this.clearColor = [0, 0, 0, 0];
+            this.useFrameBuffer = true;
+            this.gl = gl;
+            this.width = width || 1;
+            this.height = height || 1;
+        }
+        WebGLRenderTarget.prototype.resize = function (width, height) {
+            var gl = this.gl;
+            this.width = width;
+            this.height = height;
+            if (!!this.frameBuffer) {
+                gl.bindTexture(gl.TEXTURE_2D, this.texture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                gl.bindTexture(gl.TEXTURE_2D, null);
+            }
+            if (!!this.stencilBuffer) {
+                gl.deleteRenderbuffer(this.stencilBuffer);
+                this.stencilBuffer = null;
+            }
+        };
+        WebGLRenderTarget.prototype.initFrameBuffer = function () {
+            if (!this.frameBuffer) {
+                var gl = this.gl;
+                this.texture = this.createTexture();
+                this.frameBuffer = gl.createFramebuffer();
+                gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.texture, 0);
+            }
+        };
+        WebGLRenderTarget.prototype.getFrameBuffer = function () {
+            if (!this.useFrameBuffer)
+                return null;
+            return this.frameBuffer;
+        };
+        WebGLRenderTarget.prototype.createTexture = function () {
+            var gl = this.gl;
+            var texture = gl.createTexture();
+            texture['glContext'] = gl;
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            return texture;
+        };
+        return WebGLRenderTarget;
+    }());
+    KINGHT.WebGLRenderTarget = WebGLRenderTarget;
 })(KINGHT || (KINGHT = {}));

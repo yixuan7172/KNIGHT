@@ -28,15 +28,17 @@ namespace KINGHT {
         }
 
         public add(point: Point): Point {
-            this.x += point.x
-            this.y += point.y
+            return new Point(this.x + point.x, this.y + point.y)
+        }
+
+        public offset(dx: number, dy: number): Point {
+            this.x += dx
+            this.y += dy
             return this
         }
 
         public sub(point: Point): Point {
-            this.x -= point.x
-            this.y -= point.y
-            return this
+            return new Point(this.x - point.x, this.y - point.y)
         }
 
         public equals(point: Point): boolean {
